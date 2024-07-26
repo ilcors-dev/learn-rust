@@ -1,0 +1,9 @@
+Needs to be done in order to implement a web server:
+
+1. Http is based upon TCP, so we'll need to bind to a port and listen to incoming connections
+2. Find a way to respond to connections, based on the stuff we need to do.
+We should implement a parser to parse the http request, which consists of:
+- a start-line: where the protocol, status and the requested resource are requested
+- headers: the additional headers that can be attached to the request
+- blank line
+- an optional body where a client could send its data.
