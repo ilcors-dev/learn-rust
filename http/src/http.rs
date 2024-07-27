@@ -2,7 +2,7 @@ use core::panic;
 use std::{
     collections::HashMap,
     fmt::{self, Display},
-    fs::{self, File},
+    fs::{self},
     io::{BufRead, BufReader, Read, Write},
     net::TcpStream,
     str::FromStr,
