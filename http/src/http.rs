@@ -2,6 +2,7 @@ use core::panic;
 use std::{
     collections::HashMap,
     fmt::{self, Display},
+    fs::{self, File},
     io::{BufRead, BufReader, Read, Write},
     net::TcpStream,
     str::FromStr,
@@ -59,12 +60,14 @@ pub struct HttpResponse {
 
 #[derive(Debug)]
 pub struct Http {
+    resources_base_path: String,
     handlers: HashMap<String, fn(&HttpRequest) -> HttpResponse>,
 }
 
 impl Http {
-    pub fn new() -> Http {
+    pub fn new(resources_base_path: String) -> Http {
         Http {
+            resources_base_path,
             handlers: HashMap::new(),
         }
     }
@@ -83,6 +86,30 @@ impl Http {
         let action = self.handlers.get(&request.uri);
 
         if action.is_none() {
+            let is_file = has_file_extension(&request.uri);
+
+            if is_file {
+                let mut path = String::from_str(self.resources_base_path.as_str())
+                    .expect("Something went wrong while decoding uri");
+                path.push_str(&request.uri);
+                let f = fs::read_to_string(path);
+
+                match f {
+                    Ok(content) => {
+                        stream
+                            .write_all(
+                                response(request, 200, "OK".to_string(), &vec![], Some(content))
+                                    .to_string()
+                                    .as_bytes(),
+                            )
+                            .expect("Error sending reply");
+
+                        return;
+                    }
+                    Err(_) => println!("File not found {}", request.uri),
+                }
+            }
+
             stream
                 .write_all(
                     response(request, 404, "Not Found".to_string(), &vec![], None)
@@ -180,8 +207,6 @@ pub fn http_parse(stream: &TcpStream) -> HttpRequest {
     request
 }
 
-// pub fn handle(uri: &String, f: fn(request: &HttpRequest) -> HttpResponse) -> HttpResponse {}
-
 pub fn response(
     request: &HttpRequest,
     status_code: u16,
@@ -196,4 +221,14 @@ pub fn response(
         headers: headers.clone(),
         body,
     }
+}
+
+fn has_file_extension(s: &str) -> bool {
+    if let Some(pos) = s.rfind('.') {
+        if pos > 0 && pos < s.len() - 1 {
+            let extension = &s[pos + 1..];
+            return !extension.contains('/') && !extension.contains('\\');
+        }
+    }
+    false
 }

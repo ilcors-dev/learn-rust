@@ -1,8 +1,4 @@
-use std::{
-    fs::File,
-    io::{Read},
-    net::TcpListener,
-};
+use std::{fs::File, io::Read, net::TcpListener};
 
 use http::{HttpRequest, HttpResponse};
 
@@ -20,7 +16,7 @@ fn main() {
 
     println!("Listening to address localhost:9999");
 
-    let mut http = Http::new();
+    let mut http = Http::new("/Users/ilcors-dev/src/learn-rust/http".to_string());
 
     http.register_handler('/'.to_string(), handle_root);
     http.register_handler("/index".to_string(), handle_index);
