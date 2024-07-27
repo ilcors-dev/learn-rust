@@ -1,4 +1,11 @@
-use std::{fs::File, io::Read, net::TcpListener};
+use std::{
+    env,
+    fs::File,
+    io::Read,
+    net::TcpListener,
+    sync::{Arc, Mutex},
+    thread,
+};
 
 use http::{HttpRequest, HttpResponse};
 
@@ -6,8 +13,23 @@ use crate::http::Http;
 
 mod http;
 
+struct Config<'a> {
+    /// The base path where the server will start looking for static files requested by the clients
+    resources_base_path: &'a str,
+}
+
 fn main() {
-    let s = TcpListener::bind("127.0.0.1:9999");
+    let args: Vec<String> = env::args().collect();
+
+    let mut config = Config {
+        resources_base_path: "/Users/ilcors-dev/src/learn-rust/http",
+    };
+
+    if args.len() > 1 && !args[1].is_empty() {
+        config.resources_base_path = &args[1];
+    }
+
+    let s = TcpListener::bind("0.0.0.0:9999");
 
     let socket = match s {
         Ok(s) => s,
@@ -16,10 +38,16 @@ fn main() {
 
     println!("Listening to address localhost:9999");
 
-    let mut http = Http::new("/Users/ilcors-dev/src/learn-rust/http".to_string());
+    let http = Arc::new(Mutex::new(Http::new(
+        "/Users/ilcors-dev/src/learn-rust/http".to_string(),
+    )));
 
-    http.register_handler('/'.to_string(), handle_root);
-    http.register_handler("/index".to_string(), handle_index);
+    http.lock()
+        .unwrap()
+        .register_handler('/'.to_string(), handle_root);
+    http.lock()
+        .unwrap()
+        .register_handler("/index".to_string(), handle_index);
 
     for stream in socket.incoming() {
         let mut stream = match stream {
@@ -27,10 +55,17 @@ fn main() {
             Err(e) => panic!("{:?}", e),
         };
 
-        println!("Accepted request");
+        let http = Arc::clone(&http);
 
-        let request = http::http_parse(&stream);
-        http.handle(&request, &mut stream);
+        thread::spawn(move || {
+            let ip = stream.local_addr().expect("Failed to retrive address");
+
+            println!("Accepted request from address {}", ip);
+
+            let request = http::http_parse(&stream);
+            let http = http.lock().unwrap();
+            http.handle(&request, &mut stream);
+        });
     }
 }
 
