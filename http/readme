@@ -1,0 +1,6 @@
+This is a rudimentary implementation of a web server made with rust.
+
+What it does:
+> serve static files given a base folder
+> can handle custom requests by defining handlers for each uri
+> has multithreading
