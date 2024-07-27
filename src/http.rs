@@ -58,15 +58,13 @@ pub struct HttpResponse {
 }
 
 #[derive(Debug)]
-pub struct Http<'a> {
-    request: &'a HttpRequest,
+pub struct Http {
     handlers: HashMap<String, fn(&HttpRequest) -> HttpResponse>,
 }
 
-impl<'a> Http<'a> {
-    pub fn new(request: &'a HttpRequest) -> Http<'a> {
+impl Http {
+    pub fn new() -> Http {
         Http {
-            request,
             handlers: HashMap::new(),
         }
     }
@@ -81,13 +79,13 @@ impl<'a> Http<'a> {
         self
     }
 
-    pub fn handle(&self, stream: &mut TcpStream) {
-        let action = self.handlers.get(&self.request.uri);
+    pub fn handle(&self, request: &HttpRequest, stream: &mut TcpStream) {
+        let action = self.handlers.get(&request.uri);
 
         if action.is_none() {
             stream
                 .write_all(
-                    response(self.request, 404, "Not Found".to_string(), &vec![], None)
+                    response(request, 404, "Not Found".to_string(), &vec![], None)
                         .to_string()
                         .as_bytes(),
                 )
@@ -96,7 +94,7 @@ impl<'a> Http<'a> {
             return;
         }
 
-        let r = action.unwrap()(self.request);
+        let r = action.unwrap()(request);
 
         stream
             .write_all(r.to_string().as_bytes())

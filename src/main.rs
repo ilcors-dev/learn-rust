@@ -20,6 +20,11 @@ fn main() {
 
     println!("Listening to address localhost:9999");
 
+    let mut http = Http::new();
+
+    http.register_handler('/'.to_string(), handle_root);
+    http.register_handler("/index".to_string(), handle_index);
+
     for stream in socket.incoming() {
         let mut stream = match stream {
             Ok(s) => s,
@@ -29,13 +34,7 @@ fn main() {
         println!("Accepted request");
 
         let request = http::http_parse(&stream);
-
-        let mut http = Http::new(&request);
-
-        http.register_handler('/'.to_string(), handle_root);
-        http.register_handler("/index".to_string(), handle_index);
-
-        http.handle(&mut stream);
+        http.handle(&request, &mut stream);
     }
 }
 
