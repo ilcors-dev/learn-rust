@@ -2,10 +2,11 @@ use core::panic;
 use std::{
     collections::HashMap,
     fmt::{self, Display},
-    fs::{self},
+    fs,
     io::{BufRead, BufReader, Read, Write},
     net::TcpStream,
     str::FromStr,
+    vec,
 };
 
 #[derive(Debug)]
@@ -214,11 +215,17 @@ pub fn response(
     headers: &Vec<String>,
     body: Option<String>,
 ) -> HttpResponse {
+    let mut h = vec!["Server: Rust web server".to_string()];
+
+    headers.iter().for_each(|f| {
+        h.push(f.to_string());
+    });
+
     HttpResponse {
         protocol: request.protocol.clone(),
         status_code,
         reason_phrase,
-        headers: headers.clone(),
+        headers: h,
         body,
     }
 }
