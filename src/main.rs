@@ -1,10 +1,10 @@
 use std::{
     fs::File,
-    io::{Read, Write},
+    io::{Read},
     net::TcpListener,
 };
 
-use http::{response, HttpRequest, HttpResponse};
+use http::{HttpRequest, HttpResponse};
 
 use crate::http::Http;
 

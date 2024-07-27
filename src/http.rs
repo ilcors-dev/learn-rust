@@ -1,9 +1,9 @@
 use core::panic;
 use std::{
-    collections::{HashMap, HashSet},
-    fmt::{self, write, Display},
+    collections::HashMap,
+    fmt::{self, Display},
     io::{BufRead, BufReader, Read, Write},
-    net::{TcpListener, TcpStream},
+    net::TcpStream,
     str::FromStr,
 };
 
@@ -191,9 +191,9 @@ pub fn response(
 ) -> HttpResponse {
     HttpResponse {
         protocol: request.protocol.clone(),
-        status_code: status_code,
-        reason_phrase: reason_phrase,
+        status_code,
+        reason_phrase,
         headers: headers.clone(),
-        body: body,
+        body,
     }
 }
