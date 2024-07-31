@@ -1,0 +1,29 @@
+GZIP
+
+steps for compression:
+1. read a any data stream in input. let it be a file, a stream, a string from stdin
+2. build the gzip header consisting of:
+  - ID1: identifies the gzip format, always 0x1F
+  - ID2: as ID1, but always 0x8B
+  - CM (compression method): which method was used to compress the data, default is DEFLATE algorithm identified as 0x08 
+  - FLG (flags): extra optional fields that may be contained in the header
+    - bit0 FTEXT file is probably ASCII
+    - bit1 FHCRC header CRC is present
+    - bit2 FEXTRA extra field is present
+    - bit3 FNAME original filename present
+    - bit4 FCOMMENT file comment present
+    - bit5-7 reserved
+  - MTIME (modification time): 4-byte field containing the modification time of the original file. Stored as unix timestamp
+  - XLF (extra flags): indicates the level of compression
+    - 0x00 default compression
+    - 0x02 best compression
+    - 0x04 fastest compression
+  - OS (operation system)
+    - 0 FAT filesystem (MS-DOS, OS/2, NT/WIN32)
+    - 3 unix
+    - 7 macintosh
+    - 11 NTFS
+    - 255 unknown
+
+references:
+- https://datatracker.ietf.org/doc/html/rfc1951#ref-1
